@@ -20,6 +20,17 @@ from io import BytesIO
 from src.config import PROCESSED_DATA_PATH, MODEL_DIR
 
 # ---------------------------
+# OUTPUT DIRECTORIES
+# ---------------------------
+OUTPUT_DIR = "outputs"
+VISUALS_DIR = os.path.join(OUTPUT_DIR, "visuals")
+REPORTS_DIR = os.path.join(OUTPUT_DIR, "reports")
+
+os.makedirs(VISUALS_DIR, exist_ok=True)
+os.makedirs(REPORTS_DIR, exist_ok=True)
+
+
+# ---------------------------
 # PAGE CONFIG
 # ---------------------------
 st.set_page_config(page_title="PricingAI", layout="wide")
@@ -204,7 +215,7 @@ if scenario_profit:
 fig.update_layout(
     template="plotly_dark",
     height=600,
-    title="Profit Optimization with Confidence Interval",
+    title="Profit Optimization & Elasticity Simulation",
     hovermode="x unified",
     legend=dict(
         orientation="h",
@@ -215,6 +226,15 @@ fig.update_layout(
 )
 
 st.plotly_chart(fig, use_container_width=True)
+
+# Save main optimization chart
+fig.write_html(os.path.join(VISUALS_DIR, "profit_optimization_chart.html"))
+
+fig.write_image(
+    os.path.join(VISUALS_DIR, "profit_optimization_chart.png"),
+    width=1400,
+    height=800
+)
 
 
 
@@ -258,6 +278,15 @@ fig_rank.update_traces(
 
 st.plotly_chart(fig_rank, use_container_width=True)
 
+# Save main optimization chart
+fig_rank.write_html(os.path.join(VISUALS_DIR, "profit_optimization_chart.html"))
+
+fig_rank.write_image(
+    os.path.join(VISUALS_DIR, "profit_optimization_chart.png"),
+    width=1400,
+    height=800
+)
+
 # ---------------------------
 # EXECUTIVE PDF
 # ---------------------------
@@ -288,11 +317,18 @@ if st.button("Generate Executive PDF"):
         [ListItem(Paragraph(point, styles["Normal"])) for point in summary_points]
     ))
 
+    # Save PDF report
+    pdf_path = os.path.join(
+        REPORTS_DIR,
+        f"{category}_pricing_executive_report.pdf"
+    )
+
+    doc = SimpleDocTemplate(pdf_path, pagesize=letter)
     doc.build(elements)
 
     st.download_button(
         label="Download PDF",
-        data=buffer.getvalue(),
+        data=open(pdf_path, "rb").read(),
         file_name="pricing_executive_report.pdf",
         mime="application/pdf"
     )
